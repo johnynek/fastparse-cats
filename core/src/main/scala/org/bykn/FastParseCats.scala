@@ -1,13 +1,34 @@
 package org.bykn.fastparse_cats
 
 import cats.{Alternative, Eval, Functor, Monad}
-import fastparse.all._
-import fastparse.core.{ParseCtx, Mutable}
+import fastparse.Api
+import fastparse.core
+import fastparse.core.{ParserApi, ParserApiImpl}
 
-object FastParseCats {
+abstract class FastParseCatsGeneric[Elem, Repr] {
+
+  val api: Api[Elem, Repr]
+
+  import api._
+  import fastparse.core.{ParseCtx, Mutable}
+
+  private implicit def parserApi[T, V](p: T)(implicit c: T => core.Parser[V, Elem, Repr]): ParserApi[V, Elem, Repr] =
+    new ParserApiImpl[V, Elem, Repr](p)
+
+  /**
+   * From an Eval, wait to build the Parser until we run
+   */
+  def fromEval[A](e: Eval[Parser[A]]): Parser[A] =
+    new Parser[A] {
+      private[this] lazy val parser = e.value
+
+      def parseRec(cfg: ParseCtx[Elem, Repr], index: Int): Mutable[A, Elem, Repr] =
+        parser.parseRec(cfg, index)
+    }
+
   // Mutable is of course, mutable, so this is not super safe
-  private implicit val mutableFunctor: Functor[Mutable[?, Char, String]] = new Functor[Mutable[?, Char, String]] {
-    def map[A, B](fa: Mutable[A, Char, String])(fn: A => B): Mutable[B, Char, String] =
+  private implicit val mutableFunctor: Functor[Mutable[?, Elem, Repr]] = new Functor[Mutable[?, Elem, Repr]] {
+    def map[A, B](fa: Mutable[A, Elem, Repr])(fn: A => B): Mutable[B, Elem, Repr] =
       fa match {
         case Mutable.Success(a, i, t, c) =>
           Mutable.Success(fn(a), i, t, c)
@@ -18,7 +39,7 @@ object FastParseCats {
               Mutable.Success(fn(a), i, subclass.traceParsers, subclass.cut)
             case Parsed.Failure(_, _, _) =>
               // this cast is safe because Failure has type Nothing
-              subclass.asInstanceOf[Mutable[B, Char, String]]
+              subclass.asInstanceOf[Mutable[B, Elem, Repr]]
           }
       }
   }
@@ -34,18 +55,20 @@ object FastParseCats {
 
     override def map2Eval[A, B, C](fa: Parser[A], fb: Eval[Parser[B]])(fn: (A, B) => C): Eval[Parser[C]] =
       Eval.now(new Parser[C] {
-        def parseRec(cfg: ParseCtx[Char, String], index: Int): Mutable[C, Char, String] =
+        lazy val parserB = fb.value
+
+        def parseRec(cfg: ParseCtx[Elem, Repr], index: Int): Mutable[C, Elem, Repr] =
           fa.parseRec(cfg, index) match {
             case Mutable.Success(a, nextIdx, _, _) =>
-              mutableFunctor.map(fb.value.parseRec(cfg, nextIdx))(fn(a, _))
+              mutableFunctor.map(parserB.parseRec(cfg, nextIdx))(fn(a, _))
             case f: Mutable.Failure[_, _] => f
             case subclass =>
               subclass.toResult match {
                 case Parsed.Success(a, i) =>
-                  mutableFunctor.map(fb.value.parseRec(cfg, i))(fn(a, _))
+                  mutableFunctor.map(parserB.parseRec(cfg, i))(fn(a, _))
                 case Parsed.Failure(_, _, _) =>
                   // this cast is safe because Failure has type Nothing
-                  subclass.asInstanceOf[Mutable[C, Char, String]]
+                  subclass.asInstanceOf[Mutable[C, Elem, Repr]]
               }
           }
       })
@@ -61,9 +84,9 @@ object FastParseCats {
 
     def tailRecM[A, B](a: A)(fn: A => Parser[Either[A, B]]): Parser[B] =
       new Parser[B] {
-        def parseRec(cfg: ParseCtx[Char, String], index: Int): Mutable[B, Char, String] = {
+        def parseRec(cfg: ParseCtx[Elem, Repr], index: Int): Mutable[B, Elem, Repr] = {
           @annotation.tailrec
-          def loop(a: A, idx: Int): Mutable[B, Char, String] =
+          def loop(a: A, idx: Int): Mutable[B, Elem, Repr] =
             fn(a).parseRec(cfg, idx) match {
               case Mutable.Success(Right(b), i, t, c) =>
                 Mutable.Success(b, i, t, c)
@@ -78,7 +101,7 @@ object FastParseCats {
                     loop(nexta, nextIdx)
                   case Parsed.Failure(_, _, _) =>
                     // this cast is safe because Failure has type Nothing
-                    subclass.asInstanceOf[Mutable[B, Char, String]]
+                    subclass.asInstanceOf[Mutable[B, Elem, Repr]]
                 }
             }
 
@@ -86,4 +109,8 @@ object FastParseCats {
         }
       }
   }
+}
+
+object FastParseCats extends FastParseCatsGeneric[Char, String] {
+  val api = fastparse.all
 }
