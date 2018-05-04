@@ -12,7 +12,7 @@ lazy val noPublish = Seq(publish := {}, publishLocal := {}, publishArtifact := f
 lazy val fastparseCatsSettings = Seq(
   organization := "org.bykn",
   scalaVersion := "2.12.6",
-  crossScalaVersions := Seq("2.10.6", "2.11.11", "2.12.6"),
+  crossScalaVersions := Seq("2.11.11", "2.12.6"),
   libraryDependencies ++= Seq(compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6"),
     typelevel %%% "cats-core" % catsVersion,
     typelevel %%% "cats-laws" % catsVersion,
