@@ -2,11 +2,10 @@ package org.bykn.fastparse_cats
 
 import fastparse.all._
 import cats._
-import cats.implicits._
 import cats.tests.CatsSuite
 import cats.laws.discipline.{AlternativeTests, MonadTests, SemigroupalTests}
 
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.Arbitrary
 
 import FastParseCats._
 
