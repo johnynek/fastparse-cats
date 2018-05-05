@@ -152,3 +152,23 @@ lazy val core = crossProject
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
+
+lazy val byte = crossProject
+  .crossType(CrossType.Pure)
+  .in(file("byte"))
+  .settings(name := "fastparse-cats-byte")
+  .settings(moduleName := "fastparse-cats-byte")
+  .settings(fastparseCatsSettings: _*)
+  .settings(libraryDependencies ++= Seq(
+      "com.lihaoyi" %%% "fastparse-byte" % fastparseVersion))
+  //.settings(mimaPreviousArtifacts := Set(previousArtifact("core")))
+  .disablePlugins(JmhPlugin)
+  .jsSettings(commonJsSettings: _*)
+  .jsSettings(coverageEnabled := false)
+  .jvmSettings(commonJvmSettings: _*)
+  .dependsOn(core)
+
+
+lazy val byteJVM = byte.jvm
+lazy val byteJS = byte.js
+
