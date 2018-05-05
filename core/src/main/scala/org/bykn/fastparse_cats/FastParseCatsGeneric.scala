@@ -80,7 +80,7 @@ abstract class FastParseCatsGeneric[Elem, Repr] {
       fa.map(fn)
 
     override def map2Eval[A, B, C](fa: Parser[A], fb: Eval[Parser[B]])(fn: (A, B) => C): Eval[Parser[C]] =
-      Eval.now(fa.flatMap { a => buildParser.fromEvalParser(fb).map { b => fn(a, b) } })
+      Eval.later(map2(fa, buildParser.fromEvalParser(fb))(fn))
 
     override def replicateA[A](cnt: Int, fa: Parser[A]): Parser[List[A]] =
       fa.rep(cnt).map(_.toList)
