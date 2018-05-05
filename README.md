@@ -30,5 +30,16 @@ There is also support for `fastparse-byte` by using
 libraryDependencies ++= List("org.bykn" %% "fastparse-cats-byte" % "0.1.0")
 ```
 
-This is in an early state. The code works and passes the laws, but it only supports the String
-parsers and has not been published yet.
+To use the instances, make the following imports:
+
+```scala
+// get the Monad and Alternative for string Parser
+import org.bykn.fastparse_cats.StringInstances._
+```
+or
+```scala
+// get the Monad and Alternative for byte Parser
+import org.bykn.fastparse_cats.ByteInstances._
+```
+
+There are also utilities to at `buildParser.{ delay, suspend, pure, fromEval, fromEvalParser }` to build generic parsers lazily.
