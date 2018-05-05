@@ -1,34 +1,37 @@
 package org.bykn.fastparse_cats
 
-import fastparse.all._
+import fastparse.byte.all._
 import cats._
 import cats.tests.CatsSuite
 import cats.laws.discipline.{AlternativeTests, MonadTests, SemigroupalTests}
 
 import org.scalacheck.Arbitrary
 
-import FastParseCats._
+import ByteInstances._
 
 class FastParseCatsLaws extends CatsSuite {
 
   implicit val arbParse: Arbitrary[Parser[Int]] =
     Arbitrary(Arbitrary.arbitrary[Int].map { i =>
-      val stri = i.toString
-      P(stri).map(_ => i)
+      val smallInt = (i & 0xF)
+      val bytev = smallInt.toByte
+      P(BS(bytev)).map(_ => smallInt)
     })
 
   implicit val arbParseFn: Arbitrary[Parser[Int => Int]] =
     Arbitrary(Arbitrary.arbitrary[Int].map { i =>
-      val stri = i.toString
-      P(stri).map { _ => { j => j * i } }
+      val smallInt = (i & 0xF)
+      val bytev = smallInt.toByte
+      P(BS(bytev)).map { _ => { j => j * smallInt } }
     })
 
-  implicit def eqP[A: Eq](implicit arbStr: Arbitrary[String]): Eq[Parser[A]] =
+  implicit def eqP[A: Eq](implicit arbBytes: Arbitrary[Array[Byte]]): Eq[Parser[A]] =
     new Eq[Parser[A]] {
       def eqv(left: P[A], right: P[A]) = {
         (0 to 1000).forall { _ =>
-          arbStr.arbitrary.sample.forall { str =>
-            (left.parse(str), right.parse(str)) match {
+          arbBytes.arbitrary.sample.forall { bs =>
+            val bsBytes = Bytes.view(bs)
+            (left.parse(bsBytes), right.parse(bsBytes)) match {
               case (Parsed.Success(pa, a), Parsed.Success(pb, b)) =>
                 pa == pb && a == b
               case (Parsed.Failure(_, _, _), Parsed.Failure(_, _, _)) =>
@@ -50,6 +53,6 @@ class FastParseCatsLaws extends CatsSuite {
 
   test("parser equality works") {
     assert(eqP[Unit].eqv(Pass, Pass))
-    assert(eqP[Unit].eqv(AnyChar, AnyChar))
+    assert(eqP[Unit].eqv(AnyByte, AnyByte))
   }
 }
