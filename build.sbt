@@ -53,7 +53,7 @@ lazy val fastparseCatsSettings = Seq(
     checkSnapshotDependencies,
     inquireVersions,
     runClean,
-    releaseStepCommand("validate"),
+    runTest,
     setReleaseVersion,
     commitReleaseVersion,
     tagRelease,
