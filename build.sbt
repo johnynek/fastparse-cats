@@ -4,7 +4,7 @@ import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
 val typelevel = "org.typelevel"
 val catsVersion = "1.1.0"
 val fastparseVersion = "1.0.0"
-val scalaCheckVersion = "0.13.6"
+val scalaCheckVersion = "1.13.5"
 val scalaTestVersion = "3.0.5"
 
 lazy val noPublish = Seq(publish := {}, publishLocal := {}, publishArtifact := false)
