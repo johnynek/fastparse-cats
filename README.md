@@ -4,7 +4,7 @@
 
 # fastparse-cats
 
-Cats instances for fastparse parsers.
+[Cats](https://github.com/typelevel/cats) instances for [Fastparse](https://github.com/lihaoyi/fastparse) parsers.
 
 This gives you a lawful Monad and Alternative for fastparse Parsers. This allows you to easily
 reuse generic functions from cats with fastparse.
@@ -42,4 +42,4 @@ or
 import org.bykn.fastparse_cats.ByteInstances._
 ```
 
-There are also utilities to at `buildParser.{ delay, suspend, pure, fromEval, fromEvalParser }` to build generic parsers lazily.
+There are also utilities at `buildParser.{ delay, suspend, pure, fromEval, fromEvalParser }` to build generic parsers lazily.
